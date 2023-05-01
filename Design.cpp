@@ -83,7 +83,7 @@ private:
 class InternationalFlight : public Flight{
 public:
     InternationalFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime,
-                   std::string arrivalTime) : Flight(flightNumber, origin, destination, departureTime, arrivalTime) {};
+                        std::string arrivalTime) : Flight(flightNumber, origin, destination, departureTime, arrivalTime) {};
 
     void displayFlightDetails() const override {
         std::cout << "International Flight Number: " << flightNumber << ", Origin: " << origin
@@ -159,13 +159,15 @@ public:
 //            delete item;
 //        };
 //    }
+    FlightBookingSystem(const std::vector<Flight*> flights, const std::vector<Booking>& bookings){}
 
     // add a new booking into the vector
-    bool createBooking(Booking newBooking) {
-        bookings.push_back(newBooking);
+    bool createBooking() override {
+//        bookings.push_back(newBooking);
+        std::cout << "create booking" << '\n';
     };
     // remove a booking
-    bool cancelBooking(Booking cancelledBooking) {
+    bool cancelBooking() override {
 //        auto i = std::find(bookings.begin(), bookings.end(), cancelledBooking);
 //        if (i != bookings.end()) {
 //            delete *i;
@@ -187,7 +189,7 @@ public:
         // implementation
     };
 protected:
-    std::vector<Flight> flights;
+    std::vector<Flight*> flights;
     std::vector<Booking> bookings;
 };
 
@@ -198,67 +200,45 @@ protected:
 
 
 int main() {
-    // Create flights
-    DomesticFlight flight1("F1", "New York", "Los Angeles", "09:00", "14:00");
-    InternationalFlight flight2("F2", "New York", "London", "19:00", "07:00");
+// Create flights
+    DomesticFlight* dom_flight_1 = new DomesticFlight("DF-001", "New York", "Los Angeles", "09:00", "14:00");
+    DomesticFlight* dom_flight_2 = new DomesticFlight("DF-002", "California", "Florida", "10:00", "13:00");
+    DomesticFlight* dom_flight_3 = new DomesticFlight("DF-003", "Washington DC", "Chicago", "15:00", "16:00");
+
+    std::vector<Flight*> listOfDomesticFlights;
+    listOfDomesticFlights.push_back(dom_flight_1);
+    listOfDomesticFlights.push_back(dom_flight_2);
+    listOfDomesticFlights.push_back(dom_flight_3);
+
+
+    InternationalFlight* int_flight_1 = new InternationalFlight("IF-001", "New York", "London", "19:00", "07:00");
+    InternationalFlight* int_flight_2 = new InternationalFlight("IF-002", "Los Angeles", "Sydney", "00:00", "19:00");
+    InternationalFlight* int_flight_3 = new InternationalFlight("IF-003", "Atlanta", "Dubai", "08:00", "20:00");
+
+    std::vector<Flight*> listOfInternationalFlights;
+    listOfInternationalFlights.push_back(int_flight_1);
+    listOfInternationalFlights.push_back(int_flight_2);
+    listOfInternationalFlights.push_back(int_flight_3);
+
+
 
     // Create passengers
     Passenger passenger1("John Doe", 35, "1234567890");
     Passenger passenger2("Jane Doe", 29, "0987654321");
 
     // Create booking
-    Booking booking1("XQ0912", &flight1, passenger1);
-    Booking booking2("KL0689", &flight2, passenger2);
+    Booking booking1("XQ0912", dom_flight_1, passenger1);
+    Booking booking2("KL0689", int_flight_1, passenger2);
 
     booking1.displayBookingDetails();
     booking2.displayBookingDetails();
 
+    std::vector<Booking> listOfBookings;
 
 
-    return 0;
+
+
+    // Flight Booking System
+    FlightBookingSystem fbs(listOfDomesticFlights, listOfBookings);
+    fbs.createBooking();
 }
-
-//int main() {
-//    std::cout <<  "This is test file" << '\n';
-//    // Create flights
-//    DomesticFlight flight1("F1", "New York", "Los Angeles", "09:00", "14:00");
-//    InternationalFlight flight2("F2", "New York", "London", "19:00", "07:00");
-//
-//    // Create passengers
-//    Passenger passenger1("John Doe", 35, "1234567890");
-//    Passenger passenger2("Jane Doe", 29, "0987654321");
-//
-//    // Add passengers to flights
-//    flight1.addPassenger(passenger1);
-//    flight2.addPassenger(passenger2);
-//
-//    // Display flight details
-//    flight1.displayFlightDetails();
-//    flight2.displayFlightDetails();
-//
-//    // Display passenger details
-//    std::cout << "Passengers on flight F1:" << std::endl;
-//    passenger1.displayPassengerDetails();
-//
-//    std::cout << "Passengers on flight F2:" << std::endl;
-//    passenger2.displayPassengerDetails();
-//
-//    return 0;
-//}
-
-// testing
-// Create booking for passenger1 on domesticFlight
-//Booking booking1;
-//bool success = booking1.createBooking(&domesticFlight, &passenger1);
-//if (success) {
-//// Display booking details for booking1
-//booking1.displayBookingDetails();
-//}
-//
-//// Create booking for passenger2 on internationalFlight
-//Booking booking2;
-//success = booking2.createBooking(&internationalFlight, &passenger2);
-//if (success) {
-//// Display booking details for booking2
-//booking2.displayBookingDetails();
-//}
