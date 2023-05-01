@@ -116,12 +116,20 @@ public:
 
 class Booking : public IBookingSystem {
 public:
-    Booking(const std::string& referenceNumber, Flight* flight, const Passenger& passenger)
+    Booking(const std::string& referenceNumber, Flight& flight, const Passenger& passenger)
             : bookingReferenceNumber(referenceNumber), flight(flight), passenger(passenger) {}
 
     bool createBooking() override {
+        std::cout << "Booking createBooking() method with 0 parameters" << std::endl;
         return true;
-    };
+    }
+
+    bool createBooking(Flight& flight, const Passenger& passenger) {
+        std::cout << "Booking createBooking() method with 2 parameters" << std::endl;
+        this->flight = flight;
+        this->passenger = passenger;
+        return true;
+    }
 
     bool cancelBooking() override {
         return true;
@@ -141,15 +149,17 @@ public:
 
     void displayBookingDetails() override {
         std::cout << "Customer: " << passenger.getName()
-                  << "Booking Reference: " << bookingReferenceNumber
-                  << "Flight Number: " << &flight << std::endl;
+                  << " Booking Reference: " << bookingReferenceNumber
+                  << " Flight Number: " << &flight << std::endl;
     }
 
 protected:
     std::string bookingReferenceNumber;
-    Flight* flight;
+    Flight& flight;
     Passenger passenger;
 };
+
+
 
 
 class FlightBookingSystem : public IBookingSystem{
@@ -159,12 +169,12 @@ public:
 //            delete item;
 //        };
 //    }
-    FlightBookingSystem(const std::vector<Flight*> flights, const std::vector<Booking>& bookings){}
+    FlightBookingSystem(const std::vector<Flight*> flights, const std::vector<Booking>& bookings): flights(flights), bookings(bookings){}
 
     // add a new booking into the vector
     bool createBooking() override {
-//        bookings.push_back(newBooking);
         std::cout << "create booking" << '\n';
+//        bookings.push_back(newBooking);
     };
     // remove a booking
     bool cancelBooking() override {
@@ -227,11 +237,14 @@ int main() {
     Passenger passenger2("Jane Doe", 29, "0987654321");
 
     // Create booking
-    Booking booking1("XQ0912", dom_flight_1, passenger1);
-    Booking booking2("KL0689", int_flight_1, passenger2);
+    Booking booking1("XQ0912", *dom_flight_1, passenger1);
+    Booking booking2("KL0689", *int_flight_1, passenger2);
 
     booking1.displayBookingDetails();
     booking2.displayBookingDetails();
+
+    booking1.createBooking();
+
 
     std::vector<Booking> listOfBookings;
 
