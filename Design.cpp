@@ -138,7 +138,8 @@ protected:
 
 class FlightBookingSystem : public IBookingSystem {
 public:
-
+    FlightBookingSystem(std::vector<Booking> bookings, std::vector<Flight*> flights)
+            : bookings(std::move(bookings)), flights(std::move(flights)) {}
     bool createBooking() override {
         return true;
     }
@@ -166,8 +167,8 @@ public:
 
     void displayAvailableFlights() override {
         std::cout << "Available flights:" << std::endl;
-        for (const Flight& flight : flights) {
-            flight.displayFlightDetails();
+        for (const Flight* flight : flights) {
+            flight->displayFlightDetails();
         }
     }
 
@@ -191,7 +192,7 @@ public:
 
 protected:
     std::vector<Booking> bookings;
-    std::vector<Flight> flights;
+    std::vector<Flight*> flights;
 
     static std::string generateBookingReferenceNumber() {
         // generate a random string for the booking reference number
@@ -238,7 +239,7 @@ int main() {
 
     std::vector<Booking> listOfBookings;
 
-    FlightBookingSystem bookingSystem;
+    FlightBookingSystem bookingSystem(listOfBookings, listOfFlights);
 
     // Add bookings to the system
     bookingSystem.createBooking(*dom_flight_1, passenger1);
