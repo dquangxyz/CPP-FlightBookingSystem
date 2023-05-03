@@ -59,7 +59,7 @@ protected:
 class DomesticFlight : public Flight{
 public:
     DomesticFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime,std::string arrivalTime)
-        : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime)) {};
+            : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime)) {};
 
     void displayFlightDetails() const override {
         std::cout << "Domestic Flight Number: " << flightNumber << ", Origin: " << origin
@@ -81,7 +81,7 @@ private:
 class InternationalFlight : public Flight{
 public:
     InternationalFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime, std::string arrivalTime)
-        : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime)) {};
+            : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime)) {};
 
     void displayFlightDetails() const override {
         std::cout << "International Flight Number: " << flightNumber << ", Origin: " << origin
@@ -103,7 +103,7 @@ private:
 
 class IBookingSystem {
 public:
-    virtual ~IBookingSystem() = default;
+//    virtual ~IBookingSystem() = default;
     virtual bool createBooking() = 0;
     virtual bool cancelBooking() = 0;
     virtual bool updateBooking() = 0;
@@ -114,14 +114,14 @@ public:
 
 class Booking {
 public:
-    Booking(std::string referenceNumber, Flight& flight, Passenger passenger)
+    Booking(std::string referenceNumber, Flight* flight, Passenger passenger)
             : bookingReferenceNumber(std::move(referenceNumber)), flight(flight), passenger(std::move(passenger)) {}
 
     std::string getBookingReferenceNumber() const {
         return bookingReferenceNumber;
     }
 
-    Flight& getFlight() const {
+    Flight* getFlight() const {
         return flight;
     }
 
@@ -131,9 +131,10 @@ public:
 
 protected:
     std::string bookingReferenceNumber;
-    Flight& flight;
+    Flight* flight;
     Passenger passenger;
 };
+
 
 
 class FlightBookingSystem : public IBookingSystem {
@@ -143,7 +144,7 @@ public:
     bool createBooking() override {
         return true;
     }
-    bool createBooking(Flight& flight, const Passenger& passenger) {
+    bool createBooking(Flight* flight, const Passenger& passenger) {
         // generate a random booking reference number
         std::string bookingReferenceNumber = generateBookingReferenceNumber();
 
@@ -156,9 +157,22 @@ public:
         return true;
     }
 
+
     bool cancelBooking() override {
         return true;
     }
+
+    bool cancelBooking(std::string bookingRef) {
+        for (auto it = bookings.begin(); it != bookings.end(); ++it) {
+            if (it->getBookingReferenceNumber() == bookingRef) {
+                std::cout << it->getBookingReferenceNumber() <<  " is cancelled" <<'\n';
+                bookings.erase(it);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     bool updateBooking() override {
         // TODO: implement updateBooking method
@@ -185,7 +199,7 @@ public:
             std::cout << "Passenger Name: " << std::endl;
             booking.getPassenger().displayPassengerDetails();
             std::cout << "Flight Details: " << std::endl;
-            booking.getFlight().displayFlightDetails();
+            booking.getFlight()->displayFlightDetails();
             std::cout << std::endl;
         }
     }
@@ -195,15 +209,19 @@ protected:
     std::vector<Flight*> flights;
 
     static std::string generateBookingReferenceNumber() {
-        // generate a random string for the booking reference number
-        const char charset[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        // Generate a random string of length 6
         const int length = 6;
-        std::string bookingReferenceNumber;
-        for (int i = 0; i < length; i++) {
-            bookingReferenceNumber += charset[rand() % sizeof(charset)];
-        }
+        std::string bookingReferenceNumber(length, ' ');
+
+        bookingReferenceNumber[0] = rand() % 26 + 'A';
+        bookingReferenceNumber[1] = rand() % 26 + 'A';
+        bookingReferenceNumber[2] = rand() % 10 + '0';
+        bookingReferenceNumber[3] = rand() % 10 + '0';
+        bookingReferenceNumber[4] = rand() % 26 + 'A';
+        bookingReferenceNumber[5] = rand() % 26 + 'A';
         return bookingReferenceNumber;
     }
+
 };
 
 
@@ -231,6 +249,7 @@ int main() {
     // Create passengers
     Passenger passenger1("Andy Nguyen", 35, "1234567890");
     Passenger passenger2("Jane Doe", 29, "0987654321");
+    Passenger passenger3("Gillian Kan", 29, "01203130423");
 
     // Create booking
 //    Booking booking1("XQ0912", *dom_flight_1, passenger1);
@@ -242,12 +261,18 @@ int main() {
     FlightBookingSystem bookingSystem(listOfBookings, listOfFlights);
 
     // Add bookings to the system
-    bookingSystem.createBooking(*dom_flight_1, passenger1);
-    bookingSystem.createBooking(*int_flight_1, passenger2);
+    bookingSystem.createBooking(dom_flight_1, passenger1);
+    bookingSystem.createBooking(int_flight_1, passenger2);
+    bookingSystem.createBooking(int_flight_2, passenger3);
 
+//    bookingSystem.displayAvailableFlights();
+
+    bookingSystem.displayBookingDetails();
+    std::cout << "----------------" << '\n';
+    bookingSystem.cancelBooking("LF11FI");
     bookingSystem.displayBookingDetails();
 //    bookingSystem.cancelBooking("XQ0912");
 //    bookingSystem.updateBooking("KL0689", *dom_flight_2, passenger1);
-    bookingSystem.displayAvailableFlights();
+
 
 }
