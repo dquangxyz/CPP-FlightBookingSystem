@@ -9,15 +9,9 @@ public:
     Passenger(std::string name, int age, std::string contactInfo, std::string passportNo = "")
             : name(std::move(name)), age(age), contactInfo(std::move(contactInfo)), passportNo(std::move(passportNo)) {}
 
-
     // Getter functions
     std::string getName(){
         return name;
-    }
-
-    // Setter functions
-    void setName(std::string newName){
-        name = newName;
     }
 
     void displayPassengerDetails() const {
@@ -27,7 +21,6 @@ public:
         }
         std::cout << std::endl;
     }
-
 
 private:
     std::string name;
@@ -39,9 +32,9 @@ private:
 class Flight {
 public:
     Flight(std::string flightNumber, std::string origin, std::string destination,
-           std::string departureTime, std::string arrivalTime)
+           std::string departureTime, std::string arrivalTime, double basePrice)
             : flightNumber(std::move(flightNumber)), origin(std::move(origin)), destination(std::move(destination)),
-              departureTime(std::move(departureTime)), arrivalTime(std::move(arrivalTime)) {}
+              departureTime(std::move(departureTime)), arrivalTime(std::move(arrivalTime)), basePrice(basePrice) {}
 
     virtual ~Flight() = default;
 
@@ -51,16 +44,32 @@ public:
 
     virtual void displayFlightDetails() const = 0;
 
-    virtual bool addPassenger(const Passenger &p) {
-        passengers.push_back(p);
+    virtual bool addPassenger(const Passenger &newPassenger) {
+        passengers.push_back(newPassenger);
+        this->displayFlightDetails();
         return true;
     }
 
-    virtual bool removePassenger(const Passenger &p){
-        // search for passenger id and remove it from the vector p
+    virtual bool removePassenger(Passenger passenger){
+        for (auto iterator = passengers.begin(); iterator < passengers.end(); ++iterator) {
+            if (iterator->getName() == passenger.getName()) {
+                std::cout << "Passenger "<< iterator->getName() << " is removed from the flight " << this->getFlightNumber() <<'\n';
+                passengers.erase(iterator);
+            }
+        }
+        this->displayAllPassengersOnFlight();
+        return true;
     }
 
     virtual double calculateTicketPrice(){}
+
+    void displayAllPassengersOnFlight(){
+        std::cout << "On flight number "<< this->getFlightNumber() << " : ";
+        for (Passenger passenger : passengers){
+            std::cout << passenger.getName() << ", ";
+        }
+        std::cout << '\n';
+    }
 
 protected:
     std::string flightNumber;
@@ -69,12 +78,13 @@ protected:
     std::string departureTime;
     std::string arrivalTime;
     std::vector<Passenger> passengers;
+    double basePrice;
 };
 
 class DomesticFlight : public Flight{
 public:
-    DomesticFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime,std::string arrivalTime)
-            : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime)) {};
+    DomesticFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime,std::string arrivalTime, double basePrice)
+            : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime),std::move(basePrice)) {};
 
     void displayFlightDetails() const override {
         std::cout << "Domestic Flight Number: " << flightNumber << ", Origin: " << origin
@@ -83,11 +93,11 @@ public:
     }
 
     double calculateTicketPrice() override {
-        //
+        return (basePrice - domesticDiscount);
     };
 
     void applyDomesticDiscount(double discount){
-        //
+        domesticDiscount = basePrice*(discount/100);
     }
 private:
     double domesticDiscount;
@@ -95,8 +105,8 @@ private:
 
 class InternationalFlight : public Flight{
 public:
-    InternationalFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime, std::string arrivalTime)
-            : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime)) {};
+    InternationalFlight(std::string flightNumber, std::string origin, std::string destination, std::string departureTime, std::string arrivalTime, double basePrice)
+            : Flight(std::move(flightNumber), std::move(origin), std::move(destination), std::move(departureTime), std::move(arrivalTime), std::move(basePrice)) {};
 
     void displayFlightDetails() const override {
         std::cout << "International Flight Number: " << flightNumber << ", Origin: " << origin
@@ -105,11 +115,11 @@ public:
     }
 
     double calculateTicketPrice() override {
-        //
+        return (basePrice + internationalSurcharge);
     };
 
     void applyInternationalSurcharge(double surcharge){
-        //
+        internationalSurcharge = basePrice*(surcharge/100);
     }
 private:
     double internationalSurcharge;
@@ -168,21 +178,20 @@ public:
 
     // Create new booking
     bool createBooking(Flight* flight, Passenger& passenger) override {
-        // generate a random booking reference number
         std::string bookingReferenceNumber = generateBookingReferenceNumber();
-        // create a new booking with the provided flight and passenger
         Booking newBooking(bookingReferenceNumber, flight, passenger);
-        // add the booking to the list of bookings
         bookings.push_back(newBooking);
+        flight->addPassenger(passenger);
         return true;
     }
 
     // Cancel a given booking
     bool cancelBooking(std::string bookingRef) override {
-        for (auto it = bookings.begin(); it < bookings.end(); ++it) {
-            if (it->getBookingReferenceNumber() == bookingRef) {
-                std::cout << it->getBookingReferenceNumber() <<  " is cancelled" <<'\n';
-                bookings.erase(it);
+        for (auto iterator = bookings.begin(); iterator < bookings.end(); ++iterator) {
+            if (iterator->getBookingReferenceNumber() == bookingRef) {
+                std::cout << iterator->getBookingReferenceNumber() <<  " is cancelled" <<'\n';
+                bookings.erase(iterator);
+                iterator->getFlight()->removePassenger(iterator->getPassenger());
                 return true;
             }
         }
@@ -191,10 +200,10 @@ public:
 
     // Update a given booking - change to a new flight (given)
     bool updateBooking(std::string bookingRef, Flight* newFlight) override {
-        for (auto it = bookings.begin(); it < bookings.end(); ++it) {
-            if (it->getBookingReferenceNumber() == bookingRef) {
-                std::cout << it->getBookingReferenceNumber() <<  " is updated" <<'\n';
-                it->setFlight(newFlight);
+        for (Booking& booking : bookings){
+            if (booking.getBookingReferenceNumber() == bookingRef) {
+                std::cout << booking.getBookingReferenceNumber() <<  " is updated" <<'\n';
+                booking.setFlight(newFlight);
                 return true;
             }
         }
@@ -224,11 +233,11 @@ public:
     }
     void displayBookingDetails(std::string bookingRef) override {
         std::cout << "---- Displaying Booking Details from a provided booking reference number ---" << std::endl;
-        for (auto it = bookings.begin(); it < bookings.end(); ++it) {
-            if (it->getBookingReferenceNumber() == bookingRef) {
-                std::cout << "Booking Reference: " << it->getBookingReferenceNumber() << " || ";
-                std::cout << "Passenger Name: " << it->getPassenger().getName() << " || ";
-                std::cout << "Flight Details: " << it->getFlight()->getFlightNumber();
+        for (Booking& booking : bookings){
+            if (booking.getBookingReferenceNumber() == bookingRef) {
+                std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
+                std::cout << "Passenger Name: " << booking.getPassenger().getName() << " || ";
+                std::cout << "Flight Details: " << booking.getFlight()->getFlightNumber();
                 std::cout << std::endl;
             }
         }
@@ -255,12 +264,12 @@ protected:
 
 int main() {
     // Create flights (manually) and push all to a vector of Flight*
-    Flight* dom_flight_1 = new DomesticFlight("DF-001", "New York", "Los Angeles", "09:00", "14:00");
-    Flight* dom_flight_2 = new DomesticFlight("DF-002", "California", "Florida", "10:00", "13:00");
-    Flight* dom_flight_3 = new DomesticFlight("DF-003", "Washington DC", "Chicago", "15:00", "16:00");
-    Flight* int_flight_1 = new InternationalFlight("IF-001", "New York", "London", "19:00", "07:00");
-    Flight* int_flight_2 = new InternationalFlight("IF-002", "Los Angeles", "Sydney", "00:00", "19:00");
-    Flight* int_flight_3 = new InternationalFlight("IF-003", "Atlanta", "Dubai", "08:00", "20:00");
+    Flight* dom_flight_1 = new DomesticFlight("DF-001", "New York", "Los Angeles", "09:00", "14:00", 280);
+    Flight* dom_flight_2 = new DomesticFlight("DF-002", "California", "Florida", "10:00", "13:00", 300);
+    Flight* dom_flight_3 = new DomesticFlight("DF-003", "Washington DC", "Chicago", "15:00", "16:00", 75);
+    Flight* int_flight_1 = new InternationalFlight("IF-001", "New York", "London", "19:00", "07:00", 330);
+    Flight* int_flight_2 = new InternationalFlight("IF-002", "Los Angeles", "Sydney", "00:00", "19:00", 1700);
+    Flight* int_flight_3 = new InternationalFlight("IF-003", "Atlanta", "Dubai", "08:00", "20:00", 2550);
 
     std::vector<Flight*> listOfFlights;
     listOfFlights.push_back(dom_flight_1);
@@ -281,8 +290,8 @@ int main() {
     FlightBookingSystem bookingSystem(listOfBookings, listOfFlights);
 
     // Test creating bookings to the system
-    bookingSystem.createBooking(dom_flight_1, passenger1);
-    bookingSystem.createBooking(int_flight_1, passenger2);
+    bookingSystem.createBooking(int_flight_2, passenger1);
+    bookingSystem.createBooking(int_flight_2, passenger2);
     bookingSystem.createBooking(int_flight_2, passenger3);
 
     // Test displaying all flights
@@ -298,15 +307,15 @@ int main() {
 
     // Test displaying a given booking reference
     std::cout << "----------------" << '\n';
-    bookingSystem.displayBookingDetails("LR38QY");
+    bookingSystem.displayBookingDetails("LF11FI");
 
     // Test cancelling a given booking
     std::cout << "----------------" << '\n';
-    bookingSystem.cancelBooking("YQ73RT");
+    bookingSystem.cancelBooking("LF11FI");
     bookingSystem.displayAllBookingDetails();
 
     // Test updating a given booking
     std::cout << "----------------" << '\n';
-    bookingSystem.updateBooking("UQ39KX", dom_flight_2);
-    bookingSystem.displayBookingDetails("UQ39KX");
+    bookingSystem.updateBooking("ME24LN", dom_flight_2);
+    bookingSystem.displayBookingDetails("ME24LN");
 }
