@@ -165,7 +165,6 @@ public:
     virtual bool cancelBooking(std::string bookingRef) = 0;
     virtual bool updateBooking(std::string bookingRef, Flight* newFlight) = 0;
     virtual void displayAvailableFlights() = 0;
-    virtual void displayAllBookingDetails() = 0;
     virtual void displayFlightDetails(Flight* flight) = 0;
     virtual void displayBookingDetails(std::string bookingRef) = 0;
 };
@@ -222,13 +221,24 @@ public:
         flight->displayFlightDetails();
     }
 
-    void displayAllBookingDetails() override {
-        std::cout << "------ ALL Booking Details ------" << std::endl;
+    void listAllBookings() {
+        std::cout << "------ ALL Booking Details in the system------" << std::endl;
         for (Booking& booking : bookings) {
             std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
             std::cout << "Passenger Name: " << booking.getPassenger().getName() << " || ";
             std::cout << "Flight Details: " << booking.getFlight()->getFlightNumber();
             std::cout << std::endl;
+        }
+    }
+    void displayPassengerAllBookings(Passenger* passenger) {
+        std::cout << "---- Displaying All Bookings from the current passenger ---" << std::endl;
+        for (Booking& booking : bookings){
+            if (booking.getPassenger().getName() == passenger->getName()) {
+                std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
+                std::cout << "Passenger Name: " << booking.getPassenger().getName() << " || ";
+                std::cout << "Flight Details: " << booking.getFlight()->getFlightNumber();
+                std::cout << std::endl;
+            }
         }
     }
     void displayBookingDetails(std::string bookingRef) override {
@@ -267,9 +277,9 @@ int main() {
     Flight* dom_flight_1 = new DomesticFlight("DF-001", "New York", "Los Angeles", "09:00", "14:00", 280);
     Flight* dom_flight_2 = new DomesticFlight("DF-002", "California", "Florida", "10:00", "13:00", 300);
     Flight* dom_flight_3 = new DomesticFlight("DF-003", "Washington DC", "Chicago", "15:00", "16:00", 75);
-    Flight* int_flight_1 = new InternationalFlight("IF-001", "New York", "London", "19:00", "07:00", 330);
-    Flight* int_flight_2 = new InternationalFlight("IF-002", "Los Angeles", "Sydney", "00:00", "19:00", 1700);
-    Flight* int_flight_3 = new InternationalFlight("IF-003", "Atlanta", "Dubai", "08:00", "20:00", 2550);
+    Flight* int_flight_1 = new InternationalFlight("IF-004", "New York", "London", "19:00", "07:00", 330);
+    Flight* int_flight_2 = new InternationalFlight("IF-005", "Seattle", "Sydney", "00:00", "19:00", 1700);
+    Flight* int_flight_3 = new InternationalFlight("IF-006", "Atlanta", "Dubai", "08:00", "20:00", 2550);
 
     std::vector<Flight*> listOfFlights;
     listOfFlights.push_back(dom_flight_1);
@@ -286,100 +296,153 @@ int main() {
     Passenger passenger4("Terry William", 30, "09090909009");
 
     std::vector<Booking> listOfBookings;
-
     FlightBookingSystem bookingSystem(listOfBookings, listOfFlights);
 
+    // Loop 1 (most outer loop) - when the session program is active
     bool inBookingSession = true;
     std::string input;
     while(inBookingSession){
-        std::cout << "Please choose an option:" << '\n';
-        std::cout << "1. Create a booking  || 2. Cancel a booking || 3. Update a booking" << '\n';
-        std::cout << "4. View booking details  || 5. View flight details || 6. Display all available flights || 7. Quit" << '\n'<< '\n';
-        std::getline(std::cin, input);
-        if (input == "7"){
-            inBookingSession = false;
-        } else {
-            if (input == "1"){
-                bookingSystem.createBooking(int_flight_2, passenger1);
-            } else if (input == "2"){
-                std::cout << "Please enter the booking reference number to be cancelled: " << '\n';
-                std::string bookRef;
-                std::getline(std::cin, bookRef);
-                bookingSystem.cancelBooking(bookRef);
-            } else if (input == "3"){
-                bookingSystem.displayAllBookingDetails();
-                std::cout << "Please enter the booking reference number to be updated:" << '\n';
-                std::string bookRef;
-                std::getline(std::cin, bookRef);
+        std::cout << "WELCOME - select user (1,2,3,4): " << '\n';
+        Passenger* currentPassenger;
+        Flight* newFlight;
+        std::string user;
+        std::getline(std::cin, user);
 
-                std::cout << "Please select the flight number you want to change to:" << '\n';
-                std::string newFlightSelection;
-                std::getline(std::cin, newFlightSelection);
-                Flight* newFlight = int_flight_2;
-                switch (stoi(newFlightSelection)){
-                    case 1:
-                        newFlight = dom_flight_1;
-                        break;
-                    case 2:
-                        newFlight = dom_flight_2;
-                        break;
-                    case 3:
-                        newFlight = dom_flight_3;
-                        break;
-                    case 4:
-                        newFlight = int_flight_1;
-                        break;
-                    case 5:
-                        newFlight = int_flight_2;
-                        break;
-                    case 6:
-                        newFlight = int_flight_3;
-                        break;
-                    default:
-                        std::cout << "Invalid choice." << std::endl;
-                        break;
-                }
-                bookingSystem.updateBooking(bookRef, newFlight);
-            } else if (input == "4"){
-                bookingSystem.displayBookingDetails("PH40HU");
-            } else if (input == "5"){
-                bookingSystem.displayFlightDetails(int_flight_2);
-            } else if (input == "6"){
-                bookingSystem.displayAvailableFlights();
-            } else {
-                std::cout << "Invalid option - please choose a valid number" << '\n';
+        // Loop 2 - when the user is not selected
+        while (true) {
+            switch (stoi(user)) {
+                case 1:
+                    currentPassenger = &passenger1;
+                    break;
+                case 2:
+                    currentPassenger = &passenger2;
+                    break;
+                case 3:
+                    currentPassenger = &passenger3;
+                    break;
+                case 4:
+                    currentPassenger = &passenger4;
+                    break;
+                default:
+                    std::cout << "Invalid passenger - please select again (1,2,3,4) " << '\n';
+                    std::getline(std::cin, user);
+                    continue;
             }
+
+            // Loop 3 - when the user is selected
+            while(true){
+                std::cout << "Please choose an option:" << '\n';
+                std::cout << "1. Create a booking  || 2. Cancel a booking || 3. Update a booking || 4. View booking details"<< '\n';
+                std::cout << "5. View flight details || 6. Display all available flights || 7. Another booking || 8. Quit" << '\n';
+                std::getline(std::cin, input);
+
+                if (input == "8"){ // quit the most outer while-loop (first loop) - quit program
+                    inBookingSession = false;
+                    break;
+                } else if (input == "7"){ // quit the third loop (select the user again)
+                    break;
+                } else {
+                    if (input == "1"){ // create booking
+                        std::cout << "Please choose a flight (1,2,3,4,5,6) :" << '\n';
+                        bookingSystem.displayAvailableFlights();
+
+                        std::string newFlightSelection;
+                        std::getline(std::cin, input);
+                        while(true){ //Loop 4a - when flight is not selected
+                            switch (stoi(input)) {
+                                case 1:
+                                    newFlight = dom_flight_1;
+                                    break;
+                                case 2:
+                                    newFlight = dom_flight_2;
+                                    break;
+                                case 3:
+                                    newFlight = dom_flight_3;
+                                    break;
+                                case 4:
+                                    newFlight = int_flight_1;
+                                    break;
+                                case 5:
+                                    newFlight = int_flight_2;
+                                    break;
+                                case 6:
+                                    newFlight = int_flight_3;
+                                    break;
+                                default:
+                                    std::cout << "Invalid input - please select again (1,2,3,4,5,6)" << '\n';
+                                    std::getline(std::cin, input);
+                                    continue;
+                            }
+                            break;
+                        }
+                        // Call createBooking method at the end
+                        bookingSystem.createBooking(newFlight, *currentPassenger);
+
+                    } else if (input == "2"){ // cancel a booking
+                        bookingSystem.displayPassengerAllBookings(currentPassenger);
+                        std::cout << "Please enter the booking reference number to be cancelled: " << '\n';
+                        std::string bookRef;
+                        std::getline(std::cin, bookRef);
+                        bookingSystem.cancelBooking(bookRef);
+
+                    } else if (input == "3"){ // update a booking
+                        bookingSystem.displayPassengerAllBookings(currentPassenger);
+                        std::cout << "Please enter the booking reference number to be updated:" << '\n';
+                        std::string bookRef;
+                        std::getline(std::cin, bookRef);
+                        std::cout << "Please select the flight number you want to change to:" << '\n';
+                        std::string newFlightSelection;
+                        std::getline(std::cin, input);
+                        while(true){ //Loop 4b - when flight is not selected
+                            switch (stoi(input)) {
+                                case 1:
+                                    newFlight = dom_flight_1;
+                                    break;
+                                case 2:
+                                    newFlight = dom_flight_2;
+                                    break;
+                                case 3:
+                                    newFlight = dom_flight_3;
+                                    break;
+                                case 4:
+                                    newFlight = int_flight_1;
+                                    break;
+                                case 5:
+                                    newFlight = int_flight_2;
+                                    break;
+                                case 6:
+                                    newFlight = int_flight_3;
+                                    break;
+                                default:
+                                    std::cout << "Invalid input - please select again (1,2,3,4,5,6)" << '\n';
+                                    std::getline(std::cin, input);
+                                    continue;
+                            }
+                            break;
+                        }
+                        // Call updateBooking method at the end
+                        bookingSystem.updateBooking(bookRef, newFlight);
+
+                    } else if (input == "4"){ // View booking details
+                        bookingSystem.displayPassengerAllBookings(currentPassenger);
+                        std::cout << "Please enter the booking reference number to view more details: " << '\n';
+                        std::string bookRef;
+                        std::getline(std::cin, bookRef);
+                        bookingSystem.displayBookingDetails(bookRef);
+
+                    } else if (input == "5"){
+                        bookingSystem.displayFlightDetails(int_flight_2);
+
+                    } else if (input == "6"){
+                        bookingSystem.displayAvailableFlights();
+
+                    } else {
+                        std::cout << "Invalid option - please choose a valid number" << '\n';
+                    }
+                }
+            }
+            break;
         }
     }
 
-
-//    // Test creating bookings to the system
-//    bookingSystem.createBooking(int_flight_2, passenger1);
-//    bookingSystem.createBooking(int_flight_2, passenger2);
-//    bookingSystem.createBooking(int_flight_2, passenger3);
-//
-//    // Test displaying all flights
-//    bookingSystem.displayAvailableFlights();
-//
-//    // Test displaying all bookings
-//    std::cout << "----------------" << '\n';
-//    bookingSystem.displayAllBookingDetails();
-//
-//    // Test displaying a given flight
-//    std::cout << "----------------" << '\n';
-//    bookingSystem.displayFlightDetails(int_flight_3);
-//
-//    // Test displaying a given booking reference
-//    std::cout << "----------------" << '\n';
-//    bookingSystem.displayBookingDetails("LF11FI");
-//
-//    // Test cancelling a given booking
-//    std::cout << "----------------" << '\n';
-//    bookingSystem.cancelBooking("LF11FI");
-//    bookingSystem.displayAllBookingDetails();
-//
-//    // Test updating a given booking
-//    std::cout << "----------------" << '\n';
-//    bookingSystem.updateBooking("ME24LN", dom_flight_2);
-//    bookingSystem.displayBookingDetails("ME24LN");
 }
