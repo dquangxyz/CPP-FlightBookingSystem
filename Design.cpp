@@ -289,33 +289,97 @@ int main() {
 
     FlightBookingSystem bookingSystem(listOfBookings, listOfFlights);
 
-    // Test creating bookings to the system
-    bookingSystem.createBooking(int_flight_2, passenger1);
-    bookingSystem.createBooking(int_flight_2, passenger2);
-    bookingSystem.createBooking(int_flight_2, passenger3);
+    bool inBookingSession = true;
+    std::string input;
+    while(inBookingSession){
+        std::cout << "Please choose an option:" << '\n';
+        std::cout << "1. Create a booking  || 2. Cancel a booking || 3. Update a booking" << '\n';
+        std::cout << "4. View booking details  || 5. View flight details || 6. Display all available flights || 7. Quit" << '\n'<< '\n';
+        std::getline(std::cin, input);
+        if (input == "7"){
+            inBookingSession = false;
+        } else {
+            if (input == "1"){
+                bookingSystem.createBooking(int_flight_2, passenger1);
+            } else if (input == "2"){
+                std::cout << "Please enter the booking reference number to be cancelled: " << '\n';
+                std::string bookRef;
+                std::getline(std::cin, bookRef);
+                bookingSystem.cancelBooking(bookRef);
+            } else if (input == "3"){
+                bookingSystem.displayAllBookingDetails();
+                std::cout << "Please enter the booking reference number to be updated:" << '\n';
+                std::string bookRef;
+                std::getline(std::cin, bookRef);
 
-    // Test displaying all flights
-    bookingSystem.displayAvailableFlights();
+                std::cout << "Please select the flight number you want to change to:" << '\n';
+                std::string newFlightSelection;
+                std::getline(std::cin, newFlightSelection);
+                Flight* newFlight = int_flight_2;
+                switch (stoi(newFlightSelection)){
+                    case 1:
+                        newFlight = dom_flight_1;
+                        break;
+                    case 2:
+                        newFlight = dom_flight_2;
+                        break;
+                    case 3:
+                        newFlight = dom_flight_3;
+                        break;
+                    case 4:
+                        newFlight = int_flight_1;
+                        break;
+                    case 5:
+                        newFlight = int_flight_2;
+                        break;
+                    case 6:
+                        newFlight = int_flight_3;
+                        break;
+                    default:
+                        std::cout << "Invalid choice." << std::endl;
+                        break;
+                }
+                bookingSystem.updateBooking(bookRef, newFlight);
+            } else if (input == "4"){
+                bookingSystem.displayBookingDetails("PH40HU");
+            } else if (input == "5"){
+                bookingSystem.displayFlightDetails(int_flight_2);
+            } else if (input == "6"){
+                bookingSystem.displayAvailableFlights();
+            } else {
+                std::cout << "Invalid option - please choose a valid number" << '\n';
+            }
+        }
+    }
 
-    // Test displaying all bookings
-    std::cout << "----------------" << '\n';
-    bookingSystem.displayAllBookingDetails();
 
-    // Test displaying a given flight
-    std::cout << "----------------" << '\n';
-    bookingSystem.displayFlightDetails(int_flight_3);
-
-    // Test displaying a given booking reference
-    std::cout << "----------------" << '\n';
-    bookingSystem.displayBookingDetails("LF11FI");
-
-    // Test cancelling a given booking
-    std::cout << "----------------" << '\n';
-    bookingSystem.cancelBooking("LF11FI");
-    bookingSystem.displayAllBookingDetails();
-
-    // Test updating a given booking
-    std::cout << "----------------" << '\n';
-    bookingSystem.updateBooking("ME24LN", dom_flight_2);
-    bookingSystem.displayBookingDetails("ME24LN");
+//    // Test creating bookings to the system
+//    bookingSystem.createBooking(int_flight_2, passenger1);
+//    bookingSystem.createBooking(int_flight_2, passenger2);
+//    bookingSystem.createBooking(int_flight_2, passenger3);
+//
+//    // Test displaying all flights
+//    bookingSystem.displayAvailableFlights();
+//
+//    // Test displaying all bookings
+//    std::cout << "----------------" << '\n';
+//    bookingSystem.displayAllBookingDetails();
+//
+//    // Test displaying a given flight
+//    std::cout << "----------------" << '\n';
+//    bookingSystem.displayFlightDetails(int_flight_3);
+//
+//    // Test displaying a given booking reference
+//    std::cout << "----------------" << '\n';
+//    bookingSystem.displayBookingDetails("LF11FI");
+//
+//    // Test cancelling a given booking
+//    std::cout << "----------------" << '\n';
+//    bookingSystem.cancelBooking("LF11FI");
+//    bookingSystem.displayAllBookingDetails();
+//
+//    // Test updating a given booking
+//    std::cout << "----------------" << '\n';
+//    bookingSystem.updateBooking("ME24LN", dom_flight_2);
+//    bookingSystem.displayBookingDetails("ME24LN");
 }
