@@ -9,6 +9,8 @@ public:
     Passenger(std::string name, int age, std::string contactInfo, std::string passportNo = "")
             : name(std::move(name)), age(age), contactInfo(std::move(contactInfo)), passportNo(std::move(passportNo)) {}
 
+    virtual void dummyFunction() {}
+
     // Getter functions
     std::string getName(){
         return name;
@@ -63,7 +65,6 @@ private:
 };
 
 
-
 class Flight {
 public:
     Flight(std::string flightNumber, std::string origin, std::string destination,
@@ -96,7 +97,7 @@ public:
         return true;
     }
 
-    virtual double calculateTicketPrice(){}
+    virtual double calculateTicketPrice(Passenger* passenger){}
 
     void displayAllPassengersOnFlight(){
         std::cout << "On flight number "<< this->getFlightNumber() << " : ";
@@ -127,8 +128,19 @@ public:
                   << ", Arrival Time: " << arrivalTime << '\n';
     }
 
-    double calculateTicketPrice() override {
-        return (basePrice - domesticDiscount);
+    double calculateTicketPrice(Passenger* passenger) override {
+        if (VIPPassenger* vipPassenger = dynamic_cast<VIPPassenger*>(passenger)) {
+            if (vipPassenger->getStatusLevel() == Silver){
+                return (basePrice - domesticDiscount)*0.95;
+            } else if (vipPassenger->getStatusLevel() == Gold){
+                return (basePrice - domesticDiscount)*0.90;
+            } else if (vipPassenger->getStatusLevel() == Platinum){
+                return (basePrice - domesticDiscount)*0.80;
+            }
+        } else {
+            return (basePrice - domesticDiscount);
+        }
+
     };
 
     void applyDomesticDiscount(double discount){
@@ -149,8 +161,19 @@ public:
                   << ", Arrival Time: " << arrivalTime << '\n';
     }
 
-    double calculateTicketPrice() override {
-        return (basePrice + internationalSurcharge);
+    double calculateTicketPrice(Passenger* passenger) override {
+        if (VIPPassenger* vipPassenger = dynamic_cast<VIPPassenger*>(passenger)) {
+            if (vipPassenger->getStatusLevel() == Silver){
+                return (basePrice + internationalSurcharge)*0.95;
+            } else if (vipPassenger->getStatusLevel() == Gold){
+                return (basePrice + internationalSurcharge)*0.90;
+            } else if (vipPassenger->getStatusLevel() == Platinum){
+                return (basePrice + internationalSurcharge)*0.80;
+            }
+        } else {
+            return (basePrice + internationalSurcharge);
+        }
+
     };
 
     void applyInternationalSurcharge(double surcharge){
@@ -166,25 +189,19 @@ public:
             : bookingReferenceNumber(std::move(referenceNumber)), flight(flight), passenger(passenger) {}
 
     // Getter functions
-    std::string getBookingReferenceNumber() const {
+    std::string getBookingReferenceNumber() {
         return bookingReferenceNumber;
     }
-    Flight* getFlight() const {
+    Flight* getFlight() {
         return flight;
     }
-    Passenger* getPassenger() const {
+    Passenger* getPassenger(){
         return passenger;
     }
 
     // Setter functions
     void setFlight(Flight* newFlight) {
         flight = newFlight;
-    }
-    void setPassenger(Passenger* newPassenger) {
-        passenger = newPassenger;
-    }
-    void setBookingReferenceNumber(std::string newBookingReferenceNumber){
-        bookingReferenceNumber = newBookingReferenceNumber;
     }
 
 protected:
@@ -282,7 +299,7 @@ public:
             double updatedBalance = 0;
             for (Booking& booking : bookings){
                 if (booking.getPassenger()->getName() == passenger->getName()) {
-                    updatedBalance += booking.getFlight()->calculateTicketPrice();
+                    updatedBalance += booking.getFlight()->calculateTicketPrice(passenger);
                 }
             }
             passenger->setBalance(updatedBalance);
