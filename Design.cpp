@@ -13,21 +13,56 @@ public:
     std::string getName(){
         return name;
     }
-
-    void displayPassengerDetails() const {
-        std::cout << "Name: " << name << ", Age: " << age << ", Contact Info: " << contactInfo;
-        if (!passportNo.empty()) {
-            std::cout << ", Passport No: " << passportNo;
-        }
-        std::cout << '\n'<< '\n';
+    double getBalance(){
+        return balance;
     }
 
-private:
+    // Setter functions
+    void setBalance(double newBalance){
+        balance = newBalance;
+    }
+
+    void displayPassengerDetails() const {
+        std::cout << "Name: " << name << ", Age: " << age << ", Contact Info: " << contactInfo << '\n';
+        if (!passportNo.empty()) {
+            std::cout << ", Passport No: " << passportNo << '\n';
+        }
+        this->displayPassengerBalance();
+        std::cout << '\n';
+    }
+
+    void displayPassengerBalance() const {
+        std::cout << "Passenger balance: " << std::to_string(balance) << " USD";
+        std::cout <<'\n';
+    }
+
+protected:
     std::string name;
     int age;
     std::string contactInfo;
     std::string passportNo;
+    double balance;
 };
+
+// Add subclass VIP Passenger
+enum StatusLevel {
+    Gold,
+    Silver,
+    Platinum
+};
+class VIPPassenger : public Passenger {
+public:
+    VIPPassenger(std::string name, int age, std::string contactInfo, std::string passportNo, StatusLevel statusLevel)
+            : Passenger(std::move(name), age, std::move(contactInfo), std::move(passportNo)), statusLevel(statusLevel) {}
+
+    StatusLevel getStatusLevel(){
+        return statusLevel;
+    }
+private:
+    StatusLevel statusLevel;
+};
+
+
 
 class Flight {
 public:
@@ -44,16 +79,16 @@ public:
 
     virtual void displayFlightDetails() const = 0;
 
-    virtual bool addPassenger(const Passenger &newPassenger) {
+    virtual bool addPassenger(Passenger* newPassenger) {
         passengers.push_back(newPassenger);
         this->displayFlightDetails();
         return true;
     }
 
-    virtual bool removePassenger(Passenger passenger){
+    virtual bool removePassenger(Passenger* passenger){
         for (auto iterator = passengers.begin(); iterator < passengers.end(); ++iterator) {
-            if (iterator->getName() == passenger.getName()) {
-                std::cout << "Passenger "<< iterator->getName() << " is removed from the flight " << this->getFlightNumber() <<'\n';
+            if ((*iterator)->getName() == passenger->getName()) {
+                std::cout << "Passenger "<< (*iterator)->getName() << " is removed from the flight " << this->getFlightNumber() <<'\n';
                 passengers.erase(iterator);
             }
         }
@@ -65,8 +100,8 @@ public:
 
     void displayAllPassengersOnFlight(){
         std::cout << "On flight number "<< this->getFlightNumber() << " : ";
-        for (Passenger passenger : passengers){
-            std::cout << passenger.getName() << ", ";
+        for (Passenger* passenger : passengers){
+            std::cout << passenger->getName() << ", ";
         }
         std::cout << '\n';
     }
@@ -77,8 +112,8 @@ protected:
     std::string destination;
     std::string departureTime;
     std::string arrivalTime;
-    std::vector<Passenger> passengers;
-    double basePrice;
+    std::vector<Passenger*> passengers;
+    double basePrice = 0;
 };
 
 class DomesticFlight : public Flight{
@@ -100,7 +135,7 @@ public:
         domesticDiscount = basePrice*(discount/100);
     }
 private:
-    double domesticDiscount;
+    double domesticDiscount =0;
 };
 
 class InternationalFlight : public Flight{
@@ -122,13 +157,13 @@ public:
         internationalSurcharge = basePrice*(surcharge/100);
     }
 private:
-    double internationalSurcharge;
+    double internationalSurcharge = 0;
 };
 
 class Booking {
 public:
-    Booking(std::string referenceNumber, Flight* flight, Passenger passenger)
-            : bookingReferenceNumber(std::move(referenceNumber)), flight(flight), passenger(std::move(passenger)) {}
+    Booking(std::string referenceNumber, Flight* flight, Passenger* passenger)
+            : bookingReferenceNumber(std::move(referenceNumber)), flight(flight), passenger(passenger) {}
 
     // Getter functions
     std::string getBookingReferenceNumber() const {
@@ -137,7 +172,7 @@ public:
     Flight* getFlight() const {
         return flight;
     }
-    Passenger getPassenger() const {
+    Passenger* getPassenger() const {
         return passenger;
     }
 
@@ -145,8 +180,8 @@ public:
     void setFlight(Flight* newFlight) {
         flight = newFlight;
     }
-    void setPassenger(Passenger newPassenger) {
-        passenger = std::move(newPassenger);
+    void setPassenger(Passenger* newPassenger) {
+        passenger = newPassenger;
     }
     void setBookingReferenceNumber(std::string newBookingReferenceNumber){
         bookingReferenceNumber = newBookingReferenceNumber;
@@ -155,17 +190,18 @@ public:
 protected:
     std::string bookingReferenceNumber;
     Flight* flight;
-    Passenger passenger;
+    Passenger* passenger;
 };
 
 class IBookingSystem {
 public:
-    virtual bool createBooking(Flight* flight, Passenger& passenger) = 0;
+    virtual bool createBooking(Flight* flight, Passenger* passenger) = 0;
     virtual bool cancelBooking(std::string bookingRef) = 0;
     virtual bool updateBooking(std::string bookingRef, Flight* newFlight) = 0;
     virtual void displayAvailableFlights() = 0;
     virtual void displayFlightDetails(Flight* flight) = 0;
     virtual bool displayBookingDetails(std::string bookingRef) = 0;
+    virtual void updatePassengerBalance(Passenger* passenger) = 0;
 };
 
 
@@ -175,7 +211,7 @@ public:
             : bookings(std::move(bookings)), flights(std::move(flights)) {}
 
     // Create new booking
-    bool createBooking(Flight* flight, Passenger& passenger) override {
+    bool createBooking(Flight* flight, Passenger* passenger) override {
         std::string bookingReferenceNumber = generateBookingReferenceNumber();
         Booking newBooking(bookingReferenceNumber, flight, passenger);
         bookings.push_back(newBooking);
@@ -228,7 +264,7 @@ public:
         for (Booking& booking : bookings){
             if (booking.getBookingReferenceNumber() == bookingRef) {
                 std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
-                std::cout << "Passenger Name: " << booking.getPassenger().getName() << " || ";
+                std::cout << "Passenger Name: " << booking.getPassenger()->getName() << " || ";
                 std::cout << "Flight Details: ";
                 booking.getFlight()->displayFlightDetails();
                 std::cout << '\n';
@@ -236,6 +272,21 @@ public:
             }
         }
         return false;
+    }
+
+    // Part b: calculate balance of a given customer
+    void updatePassengerBalance(Passenger* passenger) override {
+        if (bookings.empty()){
+            passenger->setBalance(0);
+        } else {
+            double updatedBalance = 0;
+            for (Booking& booking : bookings){
+                if (booking.getPassenger()->getName() == passenger->getName()) {
+                    updatedBalance += booking.getFlight()->calculateTicketPrice();
+                }
+            }
+            passenger->setBalance(updatedBalance);
+        }
     }
 
     // Extra method: to list all bookings made by a passenger
@@ -246,9 +297,9 @@ public:
             return false;
         } else {
             for (Booking& booking : bookings){
-                if (booking.getPassenger().getName() == passenger->getName()) {
+                if (booking.getPassenger()->getName() == passenger->getName()) {
                     std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
-                    std::cout << "Passenger Name: " << booking.getPassenger().getName() << " || ";
+                    std::cout << "Passenger Name: " << booking.getPassenger()->getName() << " || ";
                     std::cout << "Flight Number " << booking.getFlight()->getFlightNumber();
                     std::cout << '\n';
                 }
@@ -262,7 +313,7 @@ public:
         std::cout << "------ ALL Booking Details in the system------" << std::endl;
         for (Booking& booking : bookings) {
             std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
-            std::cout << "Passenger Name: " << booking.getPassenger().getName() << " || ";
+            std::cout << "Passenger Name: " << booking.getPassenger()->getName() << " || ";
             std::cout << "Flight Details: " << booking.getFlight()->getFlightNumber();
             std::cout << '\n';
         }
@@ -336,7 +387,7 @@ int main() {
     Passenger passenger1("Andy Nguyen", 35, "1234567890");
     Passenger passenger2("Jane Doe", 29, "0987654321");
     Passenger passenger3("Gillian Kan", 29, "01203130423");
-    Passenger passenger4("Terry William", 30, "09090909009");
+    VIPPassenger passenger4("Terry William", 30, "09090909009", "", Gold);
 
     // Initialize bookingSystem
     std::vector<Booking> listOfBookings;
@@ -386,12 +437,14 @@ int main() {
                 } else if (input == "7"){ // quit the third loop (select the user again)
                     break;
                 } else {
+
                     if (input == "1"){ // create booking
                         std::cout << "Please choose a flight (1,2,3,4,5,6) :" << '\n';
                         bookingSystem.displayAvailableFlights();
                         newFlight = selectFlight(newFlight, listOfFlights);
                         // Call createBooking method at the end (once new flight is selected successfully)
-                        bookingSystem.createBooking(newFlight, *currentPassenger);
+                        bookingSystem.createBooking(newFlight, currentPassenger);
+                        bookingSystem.updatePassengerBalance(currentPassenger);
 
                     } else if (input == "2"){ // cancel a booking
                         if (bookingSystem.displayPassengerAllBookings(currentPassenger)){
@@ -402,6 +455,7 @@ int main() {
                                 if (bookRefInput == "b" || bookRefInput == "B"){ // Go back
                                     break;
                                 } else if (bookingSystem.cancelBooking(bookRefInput)){ // Perform cancelling a booking
+                                    bookingSystem.updatePassengerBalance(currentPassenger);
                                     break;
                                 } else {
                                     std::cout << "Booking reference number not found - please try again (or press 'b' to go back)" << '\n';
@@ -430,6 +484,7 @@ int main() {
                             }
                             // Call updateBooking method at the end (once booking reference and new flight are selected successfully)
                             bookingSystem.updateBooking(bookRefInput, newFlight);
+                            bookingSystem.updatePassengerBalance(currentPassenger);
                         }
 
 
