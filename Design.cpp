@@ -268,22 +268,35 @@ public:
         }
     }
 
+    std::string generateBookingReferenceNumber() {
+        // Generate a random string of length 6
+        const int length = 6;
+        std::string bookingReferenceNumber(length, ' ');
+        bool unique = false;
+        while(!unique){
+            bookingReferenceNumber[0] = rand() % 26 + 'A';
+            bookingReferenceNumber[1] = rand() % 26 + 'A';
+            bookingReferenceNumber[2] = rand() % 10 + '0';
+            bookingReferenceNumber[3] = rand() % 10 + '0';
+            bookingReferenceNumber[4] = rand() % 26 + 'A';
+            bookingReferenceNumber[5] = rand() % 26 + 'A';
+
+            // Check if the booking reference number has existed
+            unique = true;
+            for (Booking& booking : bookings){
+                if (bookingReferenceNumber == booking.getBookingReferenceNumber()) {
+                    unique = false;
+                    break;
+                }
+            }
+        }
+        return bookingReferenceNumber;
+    }
+
 protected:
     std::vector<Booking> bookings;
     std::vector<Flight*> flights;
 
-    static std::string generateBookingReferenceNumber() {
-        // Generate a random string of length 6
-        const int length = 6;
-        std::string bookingReferenceNumber(length, ' ');
-        bookingReferenceNumber[0] = rand() % 26 + 'A';
-        bookingReferenceNumber[1] = rand() % 26 + 'A';
-        bookingReferenceNumber[2] = rand() % 10 + '0';
-        bookingReferenceNumber[3] = rand() % 10 + '0';
-        bookingReferenceNumber[4] = rand() % 26 + 'A';
-        bookingReferenceNumber[5] = rand() % 26 + 'A';
-        return bookingReferenceNumber;
-    }
 };
 
 // Clean-code: Define a function to select a new flight from a given vector of flights (to be used in main function)
