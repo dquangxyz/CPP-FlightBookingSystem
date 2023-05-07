@@ -125,7 +125,7 @@ public:
     void displayFlightDetails() const override {
         std::cout << "Domestic Flight Number: " << flightNumber << ", Origin: " << origin
                   << ", Destination: " << destination << ", Departure Time: " << departureTime
-                  << ", Arrival Time: " << arrivalTime << '\n';
+                  << ", Arrival Time: " << arrivalTime << ", Base price: " << basePrice << '\n';
     }
 
     double calculateTicketPrice(Passenger* passenger) override {
@@ -158,7 +158,7 @@ public:
     void displayFlightDetails() const override {
         std::cout << "International Flight Number: " << flightNumber << ", Origin: " << origin
                   << ", Destination: " << destination << ", Departure Time: " << departureTime
-                  << ", Arrival Time: " << arrivalTime << '\n';
+                  << ", Arrival Time: " << arrivalTime << ", Base price: " << basePrice << '\n';
     }
 
     double calculateTicketPrice(Passenger* passenger) override {
@@ -406,7 +406,7 @@ int main() {
     Passenger passenger3("Gillian Kan", 29, "01203130423");
     VIPPassenger passenger4("Terry William", 30, "09090909009", "", Gold);
 
-    // Initialize bookingSystem
+    // Instantiate bookingSystem
     std::vector<Booking> listOfBookings;
     FlightBookingSystem bookingSystem(listOfBookings, listOfFlights);
 
