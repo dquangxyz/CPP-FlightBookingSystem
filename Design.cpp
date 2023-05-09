@@ -281,7 +281,8 @@ public:
         for (Booking& booking : bookings){
             if (booking.getBookingReferenceNumber() == bookingRef) {
                 std::cout << "Booking Reference: " << booking.getBookingReferenceNumber() << " || ";
-                std::cout << "Passenger Name: " << booking.getPassenger()->getName() << " || ";
+                std::cout << "Passenger Name: " << booking.getPassenger()->getName() << '\n';
+                std::cout << "Purchased Price: " << booking.getFlight()->calculateTicketPrice(booking.getPassenger()) << " USD"<< '\n';
                 std::cout << "Flight Details: ";
                 booking.getFlight()->displayFlightDetails();
                 std::cout << '\n';
@@ -460,6 +461,7 @@ int main() {
                         bookingSystem.displayAvailableFlights();
                         newFlight = selectFlight(newFlight, listOfFlights);
                         // Call createBooking method at the end (once new flight is selected successfully)
+                        std::cout << "Successfully created a new booking" << std::endl;
                         bookingSystem.createBooking(newFlight, currentPassenger);
                         bookingSystem.updatePassengerBalance(currentPassenger);
 
@@ -471,7 +473,7 @@ int main() {
                                 std::getline(std::cin, bookRefInput);
                                 if (bookRefInput == "b" || bookRefInput == "B"){ // Go back
                                     break;
-                                } else if (bookingSystem.cancelBooking(bookRefInput)){ // Perform cancelling a booking
+                                } else if (bookingSystem.cancelBooking(bookRefInput)){ // (true) Perform cancelling a booking
                                     bookingSystem.updatePassengerBalance(currentPassenger);
                                     break;
                                 } else {
